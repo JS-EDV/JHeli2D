@@ -61,4 +61,33 @@ public class Rocket extends Sprite{
 		}
 		
 	}
+
+	@Override
+	public boolean colliededWith(Sprite s) {
+		
+		if(remove){
+			return false;
+		}
+		
+		if(this.intersects(s)){
+			if(s instanceof Heli){
+				parent.createExplosion((int)getX(),(int)getY());
+				parent.createExplosion((int)s.getX(),(int)s.getY());
+				
+				remove = true;
+				s.remove = true;
+				System.out.println("Rums!!!");
+				return true;
+			}
+			if(s instanceof Rocket){
+				parent.createExplosion((int)getX(),(int)getY());
+				parent.createExplosion((int)s.getX(),(int)s.getY());
+				remove = true;
+				s.remove = true;
+				System.out.println("Rocket HIT!");
+				return true;
+			}
+		}
+		return false;
+	}
 }

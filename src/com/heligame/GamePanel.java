@@ -25,17 +25,22 @@ import javax.swing.Timer;
 public class GamePanel extends JPanel implements Runnable, KeyListener, ActionListener {
 	private static final long serialVersionUID = 1L;
 	JFrame frame;
-	boolean dbg= true;
+
 	long delta = 0;
 	long last = 0;
 	long fps = 0;
-	
-	long obs = 0;
-	long rmvdobs =0;
-	long helis =0;
-	long clds=0;
-	long rocks =0;
-	long score=0;
+	long gameover =0;
+	/*
+	 * Debugging
+	 * [dbg = false] -> DebugMode off
+	 */
+	boolean dbg= true;  	// DebugSwitch
+	long obs = 0;			// Number of Objects actually shown onScreen
+	long rmvdobs =0;		// Number of all removed Objects this session
+	long helis =0;			// Number of Helicopters actually shown onScreen
+	long clds=0;			// Number of Clouds actually shown onScreen
+	long rocks =0;			// Number of Rockets actually shown onScreen
+	long score=0;			// Score of the actual game
 
 
 	Heli copter;
@@ -51,6 +56,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 	
 	Timer timer;
 	BufferedImage[] rocket;
+	BufferedImage[] explosion;
 	BufferedImage background;
 	
 	public static void main(String[] args) {
@@ -72,9 +78,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 	}
 	private void doInits() {
 		last = System.nanoTime();
+		gameover = 0;
+		
 		BufferedImage[] heli = loadPics("com/heligame/pics/heli.gif", 4);
 		rocket = loadPics("com/heligame/pics/rocket.gif", 8);
 		background = loadPics("com/heligame/pics/background.jpg",1)[0];
+		explosion = loadPics("com/heligame/pics/explosion.gif", 5);
 		actors = new ArrayList<Sprite>();
 		painter = new ArrayList<Sprite>();
 		copter = new Heli(heli, 400, 300, 100, this);
@@ -120,7 +129,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 		
 		ListIterator<Sprite> itcR = actors.listIterator();
 		itcR.add(rock);
-	}	
+	}
+	public void createExplosion(int x, int y){
+		ListIterator<Sprite> itcE = actors.listIterator();
+		itcE.add(new Explosion(explosion, x, y, 100, this));
+	}
 	
 	@Override
 	public void run() {
@@ -203,8 +216,29 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 			}
 		}
 		obs = actors.size();
+		for(int i =0;i<actors.size();i++){
+			for(int n = i+1;n<actors.size();n++){
+				Sprite s1 = actors.get(i);
+				Sprite s2 = actors.get(n);
+				
+				s1.colliededWith(s2);				
+			}
+		}
+		if(copter.remove && gameover ==0){
+			gameover = System.currentTimeMillis();
+		}
+		if(gameover>0){
+			if(System.currentTimeMillis()-gameover>1500){
+				stopGame();
+			}
+		}
 	}
 
+	private void stopGame() {
+		timer.stop();
+		setStarted(false);
+	}
+	
 	private void checkKeys() {
 		if (up) {
 			copter.setVerticalSpeed(-speed);
@@ -281,8 +315,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 		
 		if (e.getKeyCode() == KeyEvent.VK_ESCAPE){
 			if(isStarted()){
-				setStarted(false);
-				timer.stop();
+				stopGame();
 			}else{
 				frame.dispose();
 			}

@@ -82,4 +82,5 @@ public abstract class Sprite extends Rectangle2D.Double implements Drawable, Mov
 	public void setVerticalSpeed(double dy) {
 		this.dy = dy;
 	}
+	public abstract boolean colliededWith(Sprite s);
 }

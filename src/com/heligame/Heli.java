@@ -37,4 +37,25 @@ public class Heli extends Sprite {
 	public void setY(double y){
 		this.y=y;
 	}
+
+	@Override
+	public boolean colliededWith(Sprite s) {
+		
+		if(remove){
+			return false;
+		}
+		
+		if(this.intersects(s)){
+
+			if(s instanceof Rocket){
+				parent.createExplosion((int)getX(),(int)getY());
+				parent.createExplosion((int)s.getX(),(int)s.getY());
+				remove = true;
+				s.remove = true;
+				System.out.println("Aua!");
+				return true;
+			}
+		}
+		return false;
+	}
 }
