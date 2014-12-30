@@ -15,12 +15,12 @@ public abstract class Sprite extends Rectangle2D.Double implements Drawable, Mov
 
 	protected double dx;
 	protected double dy;
-	
+
 	int loop_from;
 	int loop_to;
 
 	boolean remove;
-	
+
 	public Sprite(BufferedImage[] i, double x, double y, long delay, GamePanel p) {
 		pics = i;
 		this.x = x;
@@ -31,7 +31,6 @@ public abstract class Sprite extends Rectangle2D.Double implements Drawable, Mov
 		parent = p;
 		loop_from = 0;
 		loop_to = pics.length;
-		
 	}
 
 	@Override
@@ -108,7 +107,7 @@ public abstract class Sprite extends Rectangle2D.Double implements Drawable, Mov
 			}
 		}
 		return false;
-		
+
 	}
 
 	protected Rectangle2D.Double getSubRec(Rectangle2D.Double source, Rectangle2D.Double part) {
@@ -128,15 +127,15 @@ public abstract class Sprite extends Rectangle2D.Double implements Drawable, Mov
 		sub.height = part.height;
 		
 		return sub;
-		
+
 	}
-	
+
 	protected boolean isOpaque(int rgb) {
-		int alpha = (rgb >> 24) & 0xff;
+		int alpha = (rgb >> 24) & 0xff;		
 		
 		if(alpha==0){
 			return false;
 		}
 		return true;
-	}	
+	}
 }

@@ -29,10 +29,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 	long delta = 0;
 	long last = 0;
 	long fps = 0;
-	long gameover =0;
+	long gameover = 0;
+
 	/*
-	 * Debugging
-	 * [dbg = false] -> DebugMode off
+	 * Debugging [dbg = false] -> DebugMode off
 	 */
 	boolean dbg= true;  	// DebugSwitch
 	long obs = 0;			// Number of Objects actually shown onScreen
@@ -41,7 +41,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 	long clds=0;			// Number of Clouds actually shown onScreen
 	long rocks =0;			// Number of Rockets actually shown onScreen
 	long score=0;			// Score of the actual game
-
 
 	Heli copter;
 	ArrayList<Sprite> actors;
@@ -53,18 +52,22 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 	boolean right;
 	boolean started;
 	int speed = 50;
-	
+
 	Timer timer;
 	BufferedImage[] rocket;
 	BufferedImage[] explosion;
 	BufferedImage background;
+
+	SoundLib soundLib;
 	
 	public static void main(String[] args) {
 		new GamePanel(800, 600);
 	}
+
 	public GamePanel(int w, int h) {
 		this.setPreferredSize(new Dimension(w, h));
 		this.setBackground(Color.blue);
+		
 		frame = new JFrame("Name of the Game");
 		frame.setLocation(100, 100);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -76,6 +79,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 		Thread th = new Thread(this);
 		th.start();
 	}
+
 	private void doInits() {
 		last = System.nanoTime();
 		gameover = 0;
@@ -84,20 +88,28 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 		rocket = loadPics("com/heligame/pics/rocket.gif", 8);
 		background = loadPics("com/heligame/pics/background.jpg",1)[0];
 		explosion = loadPics("com/heligame/pics/explosion.gif", 5);
+		
 		actors = new ArrayList<Sprite>();
 		painter = new ArrayList<Sprite>();
 		copter = new Heli(heli, 400, 300, 100, this);
+		
 		createClouds();
 		actors.add(copter);
+		
+		soundLib = new SoundLib();
+		soundLib.loadSound("bumm", "com/heligame/sound/boom.wav");
+		soundLib.loadSound("rocket", "com/heligame/sound/rocket2_start.wav");
+		soundLib.loadSound("heli", "com/heligame/sound/heli.wav");
+		
+		
 		helis++;
-		
-		
 		
 		timer = new Timer(3000,this);
 		timer.start();
 		
 		started = true;
 	}
+
 	private void createClouds() {
 		BufferedImage[] bi = loadPics("com/heligame/pics/cloud.gif", 1);
 		
@@ -109,32 +121,36 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 			clds++;
 		}
 	}
+
 	private void createRocket(){
 		int x = 0;
 		int y = (int)(Math.random()*getHeight());
 		int hori = (int)(Math.random()*2);
-		
+
 		if(hori == 0){
 			x = -30;
 		} else {
 			x = getWidth()+30;
 		}
-		
+
 		Rocket rock = new Rocket(rocket,x,y,100,this);
 		if(x<0){
 			rock.setHorizontalSpeed(100);
 		} else {
 			rock.setHorizontalSpeed(-100);
 		}
-		
+
 		ListIterator<Sprite> itcR = actors.listIterator();
 		itcR.add(rock);
+		soundLib.playSound("rocket");
 	}
+
 	public void createExplosion(int x, int y){
 		ListIterator<Sprite> itcE = actors.listIterator();
 		itcE.add(new Explosion(explosion, x, y, 100, this));
+		soundLib.playSound("bumm");
 	}
-	
+
 	@Override
 	public void run() {
 		while (frame.isVisible()) {
@@ -147,12 +163,13 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 				cloneArrays();
 			}
 			repaint();
-			
+
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {}	
 		}
 	}
+
 	@SuppressWarnings(value = {"unchecked"})
 	private void cloneArrays() {
 		painter = (ArrayList<Sprite>) actors.clone();
@@ -197,12 +214,14 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 			}
 		}
 	}
+	
 	private void moveObjects() {
 		for (ListIterator<Sprite> itmO = actors.listIterator(); itmO.hasNext();) {
 			Sprite r = itmO.next();
 			r.move(delta);
 		}
 	}
+	
 	private void doLogic() {
 		for (ListIterator<Sprite> itdL = actors.listIterator(); itdL.hasNext();) {
 			Sprite r = itdL.next();
@@ -233,10 +252,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 			}
 		}
 	}
+	private void startGame(){
+		doInits();
+		setStarted(true);
+		soundLib.loopSound("heli");
+	}
 
 	private void stopGame() {
 		timer.stop();
 		setStarted(false);
+		soundLib.stopLoopSound();
 	}
 	
 	private void checkKeys() {
@@ -259,6 +284,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 			copter.setHorizontalSpeed(0);
 		}
 	}
+	
 	private BufferedImage[] loadPics(String path, int pics) {
 		BufferedImage[] anim = new BufferedImage[pics];
 		BufferedImage source = null;
@@ -276,6 +302,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 		}
 		return anim;
 	}
+	
 	@Override
 	public void keyPressed(KeyEvent e) {
 		if (e.getKeyCode() == KeyEvent.VK_UP) {
@@ -291,6 +318,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 			right = true;
 		}
 	}
+	
 	@Override
 	public void keyReleased(KeyEvent e) {
 		if (e.getKeyCode() == KeyEvent.VK_UP) {
@@ -308,8 +336,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 
 		if (e.getKeyCode() == KeyEvent.VK_ENTER){
 			if(!isStarted()){
-				doInits();					
-				setStarted(true);
+				startGame();					
 			}
 		}
 		
@@ -321,9 +348,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener, ActionLi
 			}
 		}
 	}
+	
 	@Override
 	public void keyTyped(KeyEvent e) {
 	}
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {		
 		if(isStarted() && e.getSource().equals(timer)){
